@@ -1,5 +1,5 @@
 import { getConfig } from "../src/config.js";
-import { getMethod, getRequestUrl, type RequestLike } from "../src/http.js";
+import { getRequestUrl } from "../src/http.js";
 import { setWebhook } from "../src/telegram.js";
 
 function json(body: unknown, status = 200): Response {
@@ -11,11 +11,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-export default async function handler(request: RequestLike): Promise<Response> {
-  if (getMethod(request) !== "GET") {
-    return new Response("Method Not Allowed", { status: 405 });
-  }
-
+export async function GET(request: Request): Promise<Response> {
   const { webhookSetupSecret } = getConfig();
   const url = getRequestUrl(request);
   const secret = url.searchParams.get("secret");

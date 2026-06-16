@@ -1,19 +1,11 @@
 import { getConfig } from "../src/config.js";
 import { handleTelegramUpdate } from "../src/handlers.js";
-import { getHeader, getMethod, readJson, type RequestLike } from "../src/http.js";
+import { readJson } from "../src/http.js";
 import type { TelegramUpdate } from "../src/telegram.js";
 
-type TelegramRequestLike = RequestLike & {
-  json?: () => Promise<unknown>;
-};
-
-export default async function handler(request: TelegramRequestLike): Promise<Response> {
-  if (getMethod(request) !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
-  }
-
+export async function POST(request: Request): Promise<Response> {
   const config = getConfig();
-  const secret = getHeader(request, "x-telegram-bot-api-secret-token");
+  const secret = request.headers.get("x-telegram-bot-api-secret-token");
   if (secret !== config.telegramWebhookSecret) {
     return new Response("Unauthorized", { status: 401 });
   }
