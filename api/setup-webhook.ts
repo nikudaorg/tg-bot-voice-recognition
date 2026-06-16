@@ -10,13 +10,27 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+function getRequestUrl(request: Request): URL {
+  try {
+    return new URL(request.url);
+  } catch {
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+    if (!host) {
+      throw new Error("Unable to determine request host.");
+    }
+
+    const proto = request.headers.get("x-forwarded-proto") || "https";
+    return new URL(request.url, `${proto}://${host}`);
+  }
+}
+
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== "GET") {
     return new Response("Method Not Allowed", { status: 405 });
   }
 
   const { webhookSetupSecret } = getConfig();
-  const url = new URL(request.url);
+  const url = getRequestUrl(request);
   const secret = url.searchParams.get("secret");
 
   if (secret !== webhookSetupSecret) {
