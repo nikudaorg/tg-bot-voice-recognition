@@ -119,9 +119,11 @@ function escapeHtml(value: string): string {
     .replaceAll(">", "&gt;");
 }
 
-function toRichHtml(title: string, text: string): string {
-  const safeText = escapeHtml(text) || "(empty transcript)";
-  return `<b>${escapeHtml(title)}</b>\n\n${safeText}`;
+function toRichHtml(title: string | undefined, text: string): string {
+  const safeText = escapeHtml(text) || '(empty transcript)';
+  return title !== undefined
+    ? `<b>${escapeHtml(title)}</b>\n\n${safeText}`
+    : safeText;
 }
 
 function sliceDraftWindow(text: string): string {
@@ -221,22 +223,22 @@ export async function sendFinalTranscript(
   const parts = chunkText(transcript);
 
   for (let index = 0; index < parts.length; index += 1) {
-    const title =
-      parts.length === 1 ? "Transcript" : `Transcript (${index + 1}/${parts.length})`;
+    // const title =
+    //   parts.length === 1 ? "Transcript" : `Transcript (${index + 1}/${parts.length})`;
 
     const payload: RichMessagePayload = {
       chat_id: chatId,
       rich_message: {
-        html: toRichHtml(title, parts[index]),
-        skip_entity_detection: true,
-      },
+        html: toRichHtml(undefined, parts[index]),
+        skip_entity_detection: true
+      }
     };
 
     if (index === 0) {
       payload.reply_parameters = { message_id: replyToMessageId };
     }
 
-    await telegramRequest("sendRichMessage", payload);
+    await telegramRequest('sendRichMessage', payload);
   }
 }
 
