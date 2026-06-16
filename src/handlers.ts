@@ -9,9 +9,11 @@ import {
   sendDraft,
   sendErrorMessage,
   sendFinalTranscript,
+  sendUnauthorizedMessage,
   type TelegramMessage,
   type TelegramUpdate,
 } from "./telegram.js";
+import { getConfig } from "./config.js";
 import { transcribeAudio } from "./transcribe.js";
 
 function sourceFilename(message: TelegramMessage, kind: "voice" | "audio"): string {
@@ -26,11 +28,23 @@ function sourceFilename(message: TelegramMessage, kind: "voice" | "audio"): stri
 
 export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void> {
   if (update.message) {
+    if (!isAuthorizedMessage(update.message)) {
+      if (update.message.chat.type === "private") {
+        await sendUnauthorizedMessage(update.message.chat.id);
+      }
+      return;
+    }
+
     await handleIncomingMessage(update.message);
     return;
   }
 
   if (update.callback_query) {
+    if (!isAuthorizedCallback(update.callback_query)) {
+      await answerCallbackQuery(update.callback_query.id, "Not allowed.");
+      return;
+    }
+
     await handleCallback(update.callback_query);
   }
 }
@@ -158,4 +172,24 @@ function mimeTypeFromPath(filePath: string): string {
     return "audio/webm";
   }
   return "application/octet-stream";
+}
+
+function isAuthorizedMessage(message: TelegramMessage): boolean {
+  const userId = message.from?.id;
+  if (userId === undefined) {
+    return false;
+  }
+
+  return getConfig().allowedTelegramUserIds.has(userId);
+}
+
+function isAuthorizedCallback(
+  callbackQuery: NonNullable<TelegramUpdate["callback_query"]>,
+): boolean {
+  const userId = callbackQuery.from?.id;
+  if (userId === undefined) {
+    return false;
+  }
+
+  return getConfig().allowedTelegramUserIds.has(userId);
 }

@@ -19,6 +19,7 @@ OPENAI_API_KEY=...
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_WEBHOOK_SECRET=...
 WEBHOOK_SETUP_SECRET=...
+ALLOWED_TELEGRAM_USER_IDS=123456789,987654321
 OPENAI_TRANSCRIPTION_MODEL=gpt-4o-mini-transcribe
 ```
 
@@ -43,6 +44,7 @@ Then expose the local server with a tunnel and point Telegram webhook setup at t
 ## Notes
 
 - The webhook handler is stateless, so it works on Vercel without Redis or a database.
+- Access is restricted to Telegram user IDs listed in `ALLOWED_TELEGRAM_USER_IDS`.
 - Telegram draft streaming currently targets private chats. In non-private chats, the bot still sends the final transcript.
 - Transcript text is sanitized and HTML-escaped before sending to Telegram so accidental formatting characters do not break the output.
 

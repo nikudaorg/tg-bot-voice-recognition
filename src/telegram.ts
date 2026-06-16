@@ -13,6 +13,9 @@ export type TelegramMessage = {
     id: number;
     type: string;
   };
+  from?: {
+    id: number;
+  };
   text?: string;
   voice?: TelegramFileRef;
   audio?: TelegramFileRef;
@@ -21,6 +24,9 @@ export type TelegramMessage = {
 
 export type TelegramCallbackQuery = {
   id: string;
+  from?: {
+    id: number;
+  };
   data?: string;
   message?: TelegramMessage;
 };
@@ -249,6 +255,13 @@ export async function sendErrorMessage(chatId: number, replyToMessageId: number)
     reply_parameters: {
       message_id: replyToMessageId,
     },
+  });
+}
+
+export async function sendUnauthorizedMessage(chatId: number): Promise<void> {
+  await telegramRequest("sendMessage", {
+    chat_id: chatId,
+    text: "You are not allowed to use this bot.",
   });
 }
 
